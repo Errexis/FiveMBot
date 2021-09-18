@@ -6,8 +6,12 @@ from datetime import datetime
 import time
 import os
 import random
+import fivem
 
 client = commands.Bot(command_prefix="ba!")
+
+server: fivem.getServer("177.54.145.74:30120") # teste para puxar as info do servidor 
+print(server.players)
 
 @client.event
 async def on_ready():
@@ -15,6 +19,17 @@ async def on_ready():
     await client.change_presence(status=discord.Status.idle, activity=activity)
     print("Bot has successfully logged in as: {}".format(client.user))
     print("Bot ID: {}\n".format(client.user.id))
+    
+
+@client.command()  # teste para puxar as info do servidor ( ainda em desenvolvimento )
+async def players(ctx):
+    await ctx.message.delete() 
+    players = server.players
+    player = discord.Embed(
+        title = "Players Online",
+        description = players,
+        color = discord.Colour.from_rgb(90,5,97))
+    await ctx.message.send(embed=player)
 
 @client.command()
 async def say(ctx, *, teste):
