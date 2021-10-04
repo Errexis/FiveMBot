@@ -30,7 +30,7 @@ class config:
     serverIP = "blastrp.com.br:30120" #IP:PORT | Example: 87.98.246.41:30120 | Use 127.0.0.1:PORT if you're running it on same Server as FiveM Server.
     serverIPC = "blastrp.com.br"
     guildID = 829468262320177202 #Your Discord Server ID, must be int. | Example: 721939142455459902
-    Token = "ODY4MzQ5NDQzODY1NDUyNTg2.YPuXcA.cJzHDd-bsNZgNZfmcBDVZRQTQ00" #Your Discord Bot Token 
+    Token = "" #Your Discord Bot Token 
 
 
 @client.event
@@ -259,4 +259,4 @@ async def rename(ctx, member: discord.Member, *, newnick):
   await member.edit(nick=newnick)
   await ctx.channel.send(f'>>> Foi alterado o nome de {member.mention}')
 
-client.run('ODY4MzQ5NDQzODY1NDUyNTg2.YPuXcA.cJzHDd-bsNZgNZfmcBDVZRQTQ00')
+client.run('')
