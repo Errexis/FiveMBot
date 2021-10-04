@@ -8,7 +8,8 @@ import os
 import random
 import fivem
 
-client = commands.Bot(command_prefix="&")
+client = commands.Bot(command_prefix="$
+")
 
 server: fivem.getServer("177.54.145.74:30120") # teste para puxar as info do servidor 
 print(server.players)
