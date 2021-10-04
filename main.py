@@ -1,18 +1,37 @@
+import os
 import discord
 import asyncio
-from discord import reaction
-from discord.ext import commands, tasks
-from datetime import datetime
 import time
-import os
-import random
-import fivem
+#discord ext
+from discord import reaction
+from discord.ext import commands
+from discord.ext import tasks
+from mysql.connector import cursor
+import requests as rq
+from datetime import datetime
+import mysql.connector 
 
-client = commands.Bot(command_prefix="$
-")
+db = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="anakin123",
+    database="blastbot"
+)
+mycursor = db.cursor()
+db_info = db.get_server_info()
+print(f'Database do bot Iniciada, Versão do MYSQL:{db_info}')
 
-server: fivem.getServer("177.54.145.74:30120") # teste para puxar as info do servidor 
-print(server.players)
+
+client = commands.Bot(command_prefix=['$'])
+client.remove_command('help')
+
+## Config
+class config:
+    serverIP = "blastrp.com.br:30120" #IP:PORT | Example: 87.98.246.41:30120 | Use 127.0.0.1:PORT if you're running it on same Server as FiveM Server.
+    serverIPC = "blastrp.com.br"
+    guildID = 829468262320177202 #Your Discord Server ID, must be int. | Example: 721939142455459902
+    Token = "ODY4MzQ5NDQzODY1NDUyNTg2.YPuXcA.cJzHDd-bsNZgNZfmcBDVZRQTQ00" #Your Discord Bot Token 
+
 
 @client.event
 async def on_ready():
@@ -20,30 +39,59 @@ async def on_ready():
     await client.change_presence(status=discord.Status.idle, activity=activity)
     print("Bot has successfully logged in as: {}".format(client.user))
     print("Bot ID: {}\n".format(client.user.id))
+
+#request
+def pc():
+    try:
+        resp = rq.get('http://'+config.serverIP+'/players.json').json()
+        return(len(resp))
+    except:
+        return('N/A')
+
+## Say Commands
+@client.command(pass_content=True, aliases=['s'])
+@commands.has_permissions(administrator=True) 
+async def say(ctx, *, text):
+
+    try:
+        await ctx.message.delete()
+        embed=discord.Embed(title="Blast Academy", description=" ", color= discord.Colour.from_rgb(90,5,97), timestamp=datetime.now())
+        embed.set_author(name="Blast Bot", url="", icon_url="https://images-ext-1.discordapp.net/external/DKb6qWSNVPhR-E4lMc5e74W_2s7DsYNUnp6oM7jtxJA/%3Fsize%3D2048/https/cdn.discordapp.com/icons/794341861413355520/a_36f54b448066c33bb40e09c89a695f73.gif")
+        embed.set_thumbnail(url="https://images-ext-1.discordapp.net/external/DKb6qWSNVPhR-E4lMc5e74W_2s7DsYNUnp6oM7jtxJA/%3Fsize%3D2048/https/cdn.discordapp.com/icons/794341861413355520/a_36f54b448066c33bb40e09c89a695f73.gif")
+        embed.add_field(name="Mensagem:", value=text, inline=False)
+        embed.set_footer(text=f"{ctx.message.author}", icon_url=ctx.message.author.avatar_url)
+        await ctx.send(embed=embed)
+    except Exception as err:
+        print(err)
     
-
-@client.command()  # teste para puxar as info do servidor ( ainda em desenvolvimento )
-async def players(ctx):
-    await ctx.message.delete() 
-    players = server.players
-    player = discord.Embed(
-        title = "Players Online",
-        description = players,
-        color = discord.Colour.from_rgb(90,5,97))
-    await ctx.message.send(embed=player)
+@client.command(pass_context=True, aliases=['hs'])
+@commands.has_permissions(administrator=True) 
+async def hsay(ctx, *, text):
+    await ctx.message.delete()
+    await ctx.send(text)
 
 @client.command()
-async def say(ctx, *, teste):
+@commands.has_permissions(administrator=True) 
+async def online(ctx):
     await ctx.message.delete()
-    if ctx.message.author.id == 248516756463681536:
-        await ctx.channel.send(teste)
-    else:
-        await ctx.channel.send(f'{ctx.message.author.mention}, você não tem permissão para esse comando')
+    content = "~~@everyone~~"
+    embed=discord.Embed(title="Server Online !", description="O Servidor já se encontra online! para se conectar siga a instrução baixo e bom jogo.", color=discord.Colour.from_rgb(90,5,97), timestamp=datetime.now())
+    embed.set_thumbnail(url="https://images-ext-1.discordapp.net/external/DKb6qWSNVPhR-E4lMc5e74W_2s7DsYNUnp6oM7jtxJA/%3Fsize%3D2048/https/cdn.discordapp.com/icons/794341861413355520/a_36f54b448066c33bb40e09c89a695f73.gif")
+    embed.add_field(name="✅ Cole o comando no F8 ✅", value=f"connect {config.serverIPC}", inline=False)
+    await ctx.send(embed=embed, content=content)
 
 @client.command()
-async def rx(ctx):
-    await ctx.message.delete()
-    await ctx.send(f'{ctx.message.author.mention}, https://twitch.tv/rxrp_')
+@commands.has_permissions(administrator=True)
+async def info(ctx):
+    embed = discord.Embed(title=f"{ctx.guild.name}", description="Informações do Servidor", timestamp=datetime.now(), color=discord.Colour.from_rgb(90,5,97))
+    embed.add_field(name="Servidor criado em", value=f"{ctx.guild.created_at}")
+    embed.add_field(name="Proprietário do servidor", value=f"{ctx.guild.owner_id}")
+    embed.add_field(name="Região do Servidor", value=f"{ctx.guild.region}")
+    embed.add_field(name="ID do Servidor", value=f"{ctx.guild.id}")
+    embed.set_thumbnail(url=f"{ctx.guild.icon}")
+    embed.set_thumbnail(url="https://images-ext-1.discordapp.net/external/DKb6qWSNVPhR-E4lMc5e74W_2s7DsYNUnp6oM7jtxJA/%3Fsize%3D2048/https/cdn.discordapp.com/icons/794341861413355520/a_36f54b448066c33bb40e09c89a695f73.gif")
+
+    await ctx.send(embed=embed)
 
 @client.command(pass_context=True)
 @commands.has_permissions(administrator=True)
@@ -55,23 +103,26 @@ async def anuncio(ctx,titulo,message,r=0,g=0,b=255):
         color = discord.Colour.from_rgb(r,g,b),
         timestamp = datetime.now())
     announce.set_footer(text=ctx.message.author.display_name)
-    announce.set_thumbnail(url="https://cdn.discordapp.com/icons/827574690145894462/a_34c4acd6e628e056a47a07fc8190020d.gif?size=2048")
+    announce.set_thumbnail(url="https://images-ext-1.discordapp.net/external/DKb6qWSNVPhR-E4lMc5e74W_2s7DsYNUnp6oM7jtxJA/%3Fsize%3D2048/https/cdn.discordapp.com/icons/794341861413355520/a_36f54b448066c33bb40e09c89a695f73.gif")
     await ctx.channel.send(embed=announce)
 
-@client.command()
-@commands.has_permissions(administrator=True)
-async def info(ctx):
-    embed = discord.Embed(title=f"{ctx.guild.name}", description="Informações do Servidor", timestamp=datetime.now(), color=discord.Color.blue())
-    embed.add_field(name="Servidor criado em", value=f"{ctx.guild.created_at}")
-    embed.add_field(name="Proprietário do servidor", value=f"{ctx.guild.owner_id}")
-    embed.add_field(name="Região do Servidor", value=f"{ctx.guild.region}")
-    embed.add_field(name="ID do Servidor", value=f"{ctx.guild.id}")
-    embed.set_thumbnail(url=f"{ctx.guild.icon}")
-    embed.set_thumbnail(url="https://cdn.discordapp.com/icons/827574690145894462/a_34c4acd6e628e056a47a07fc8190020d.gif?size=2048")
-
-    await ctx.send(embed=embed)
-
 #####Moderação
+@client.command() #Lista de jogadores banidos. 
+@commands.has_permissions(administrator=True)
+async def bans(ctx, option=0, nome=None, id=None):
+    mycursor = db.cursor()
+    if option==0:
+        mycursor.execute('SELECT name, id FROM banidos')
+        for x in mycursor:
+          await ctx.channel.send(f'**Banido**:\n**ID**: {x[1]}\n**Nome**:{x[0]}')
+        return
+    if option==1:
+        mycursor.execute(f'INSERT INTO banidos(name,id) VALUES(%s,%s)', (nome,id))
+        db.commit()
+        mycursor.execute('SELECT * FROM banidos')
+        await ctx.channel.send(f'Jogador **{id} | {nome}** foi adicionado na lista de banidos.')
+        print(f'{id} foi banido.')
+
 @client.command()
 @commands.has_permissions(administrator=True)
 async def kick(ctx, member: discord.Member, *, reason=None):
@@ -95,13 +146,67 @@ async def puni(ctx, member: discord.Member, id, punicao, reason=None):
         color = discord.Colour.from_rgb(90,5,97),
         timestamp = datetime.now())
     msg.set_footer(text=f'enviado por: {ctx.message.author.display_name}')
-    msg.set_thumbnail(url="https://cdn.discordapp.com/icons/827574690145894462/a_34c4acd6e628e056a47a07fc8190020d.gif?size=2048")
+    msg.set_thumbnail(url="https://images-ext-1.discordapp.net/external/DKb6qWSNVPhR-E4lMc5e74W_2s7DsYNUnp6oM7jtxJA/%3Fsize%3D2048/https/cdn.discordapp.com/icons/794341861413355520/a_36f54b448066c33bb40e09c89a695f73.gif")
     await canal.send(embed=msg)
 
 @client.command()
 @commands.has_permissions(administrator=True)
-async def clear(ctx, amount=20):
-    await ctx.channel.purge(limit=amount)
+async def ip(ctx, *, ip=None):
+    if not ip:
+        await ctx.send('<@{}>, Especifique um endereço IP!'.format(ctx.message.author.id))
+        return
+    rsp = rq.get('http://ip-api.com/json/'+ip).json()
+    if rsp['status'] == 'fail':
+        embed=discord.Embed(color=0xFF0000)
+        embed.add_field(name="❌ Falha na consulta", value="❓ Motivo: "+rsp['message'])
+        embed.set_footer(text="Consulta: "+ip)
+        await ctx.send(embed=embed)
+        return
+    embed=discord.Embed(color=0x00FFFF)
+    embed.add_field(name="✅Status: "+rsp['status'], value=f"\n\n🌍Country: {rsp['country']} \n\n🌏CountryCode: {rsp['countryCode']} \n\n🔷Region: {rsp['region']} \n\n🔷Region Name: {rsp['regionName']} \n\n🔷City: {rsp['city']} \n\n🕑TimeZone: {rsp['timezone']} \n\n🏢ISP: {rsp['isp']}\n\n🏢ISP OrgName: {rsp['org']}\n\n🏢ISP MoreInfo: {rsp['as']}", inline=False)
+    embed.set_footer(text="IP Solicitado: "+ip)
+    await ctx.send(embed=embed)
+
+@client.command()
+@commands.has_permissions(administrator=True) 
+async def players(ctx):
+    
+    timenow = time.strftime("%H:%M")
+    resp = rq.get('http://'+config.serverIP+'/players.json').json()
+    total_players = len(resp)
+    if len(resp) > 25:
+        for i in range(round(len(resp) / 25)):
+            embed = discord.Embed(title='FiveMBot Bot', description='Server Players', color=discord.Color.blurple())
+            embed.set_footer(text=f'Total Players : {total_players} | FiveMBot | {timenow}')
+            count = 0
+            for player in resp:
+                embed.add_field(name=player['name'], value='ID : ' + str(player['id']))
+                resp.remove(player)
+                count += 1
+                if count == 25:
+                    break
+                else:
+                    continue
+
+            await ctx.send(embed=embed)
+    else:
+        embed = discord.Embed(title='FiveMBot Bot', description='Server Players', color=discord.Color.blurple())
+        embed.set_footer(text=f'Total Players : {total_players} | FiveMBot | {timenow}')
+        for player in resp:
+            embed.add_field(name=player['name'], value='ID : ' + str(player['id']))
+        await ctx.send(embed=embed)
+
+#comando de clear 
+@client.command()
+@commands.has_permissions(administrator=True)
+async def clear(ctx, amount=100):
+    if amount>100: 
+        amount = 100
+        await ctx.send(f"Você so pode apagar até {amount}.")
+    else: 
+        amount<=100  
+        await ctx.channel.purge(limit=amount)
+        await ctx.send(f"{amount} mensagens foram apagadas.")
 
 @client.command()
 @commands.has_permissions(manage_channels = True)
@@ -148,61 +253,10 @@ async def unmute(ctx, member: discord.Member):
     await member.remove_roles(role)
     await ctx.send(f"{member} foi desmutado.")
 
-#messagem automatica a cada 8hrs
-@tasks.loop(hours=8)
-async def send():
-    channel = await client.fetch_channel(861451613737975818)
-    automsg = discord.Embed(
-        title = 'Adquira já seu VIP conosco!',
-        description = f'**Está cansado de pegar fila, ou quer um carro melhor? confira já nossos pacotes de VIPs, caso tenha alguma dúvida abra um ticket!**',
-        color = discord.Colour.from_rgb(90,5,97),
-        timestamp = datetime.now())
-    automsg.set_footer(text=f'Blast Academy©')
-    automsg.set_thumbnail(url="https://cdn.discordapp.com/icons/827574690145894462/a_34c4acd6e628e056a47a07fc8190020d.gif?size=2048")
-    await channel.send(embed=automsg)
-
-@send.before_loop
-async def before():
-    await client.wait_until_ready()
-
 @client.command(pass_context=True)
 async def rename(ctx, member: discord.Member, *, newnick):
   await ctx.message.delete()
   await member.edit(nick=newnick)
   await ctx.channel.send(f'>>> Foi alterado o nome de {member.mention}')
 
-@client.event
-async def on_message(ctx):
-    if ctx.channel.id == 867624467177013258 and not ctx.author.bot:
-        msg = ctx.content.lower()
-        lin1 = msg.splitlines(1)[0]
-        lin2 = msg.splitlines(1)[1]
-        nome = ""
-        pid = ""
-        if lin1.startswith("nome"):
-            nome = lin1.split("nome:")[1]
-            pid = lin2.split("id:")[1]
-        elif lin1.startswith("id"):
-            pid = lin1.split("id:")[1]
-            nome = lin2.split("nome:")[1]
-
-        if nome.startswith(" "):
-            nome = nome[1:]
-        if pid.startswith(" "):
-            pid = pid[1:]
-
-        pnick = f"{pid} | {nome.title()}"
-        if "\n" in pnick:
-          pnick = pnick.replace("\n","").replace("  "," ")
-        await ctx.add_reaction('✅')
-        await ctx.author.edit(nick=f'{pnick}')
-        await ctx.add_reaction('❌')        
-        """ await ctx.channel.send(pnick) """
-
-    if ctx.channel.id == 883411060525260911 and not ctx.author.bot:
-        await ctx.add_reaction('✅')
-        await ctx.add_reaction('❌')
-
-send.start()
-
-client.run('')
+client.run('ODY4MzQ5NDQzODY1NDUyNTg2.YPuXcA.cJzHDd-bsNZgNZfmcBDVZRQTQ00')
